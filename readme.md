@@ -10,6 +10,15 @@ How to run:
     Run app:
         python(3) app.py
 
+How to send to Github:
+    git status: see staged files
+
+    git add --all: add all unstaged files to stage
+
+    git commit -m "message": commit changes to master branch with a message
+
+    git push origin main: push commited changes from origin (myself) to main branch (on Github)
+
 Current thing being worked on: 
     Styling and UX improvements
 
