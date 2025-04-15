@@ -5,7 +5,7 @@ import html
 import requests
 import re
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static", template_folder="templates")
 
 ########### FORMAT CITATION FUNCTIONS ###########
 
@@ -227,4 +227,4 @@ def lookup_url():
 ##############################################################################
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
