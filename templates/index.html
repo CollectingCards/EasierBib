@@ -19,7 +19,7 @@
 
         <!-- Dropdown to select autofill method -->
         <label for="autofillType">Choose auto-fill type:</label>
-        <select id="autofillType" onChange="showAutofillField()">
+        <select id="autofillType" onchange="showAutofill(this.value)"> 
             <option value="">-- Select --</option>
             <option value="doi">DOI</option>
             <option value="isbn">ISBN</option>
@@ -27,31 +27,31 @@
             <!--   <option value=""></option>   -->
         </select>
 
+        <div class="autofill-wrapper">
+            <!-- Fills form with DOI Auto-fill data -->
+            <div id="doi" class="smooth-toggle">
+                <label for="doi">DOI: </label>>
+                <input type="text" id="doi-input" name="doi-input" placeholder="Enter DOI (e.g. 10.1234/abc123)"> 
+                <button type="button" onclick="fetchDOIData()">Autofill from DOI</button><br>
+                <p id="doi-status">Status...</p>
+            </div>
+            
+            <!-- Fills form with ISBN Auto-fill data -->
+            <div id="isbn" class="smooth-toggle">
+                <label for="isbn">ISBN: </label>>
+                <input type="text" id="isbn-input" name="isbn-input" placeholder="Enter ISBN (e.g. 9780140328721)">
+                <button type="button" onclick="fetchISBNData()">Autofill from ISBN</button><br>
+                <p id="isbn-status">Status...</p>
+            </div>
 
-        <!-- Fills form with DOI Auto-fill data -->
-        <div id="doi-input" style="display:none">
-            <label for="doi">DOI: </label>>
-            <input type="text" id="doi" name="doi" placeholder="Enter DOI (e.g. 10.1234/abc123)"> 
-            <button type="button" onclick="fetchDOIData()">Autofill from DOI</button><br>
-            <!-- <p id="doi-status">Status...</p> -->
+            <!-- Fills form with URL Auto-fill data -->
+            <div id="url" class="smooth-toggle">
+                <label for="url">URL: </label>>
+                <input type="text" id="url-input" name="url-input" placeholder="Enter a website URL (e.g. https://example.com)">
+                <button type="button" onclick="fetchURLData()">Autofill from URL</button><br>
+                <p id="url-status">Status...</p>
+            </div>
         </div>
-        
-        <!-- Fills form with ISBN Auto-fill data -->
-        <div id="isbn-input" style="display:none">
-            <label for="isbn">ISBN: </label>>
-            <input type="text" id="isbn" name="isbn" placeholder="Enter ISBN (e.g. 9780140328721)">
-            <button type="button" onclick="fetchISBNData()">Autofill from ISBN</button><br>
-            <!-- <p id="isbn-status">Status...</p> -->
-        </div>
-
-        <!-- Fills form with URL Auto-fill data -->
-        <div id="url-input" style="display:none">
-            <label for="url">URL: </label>>
-            <input type="text" id="url" name="url" placeholder="Enter a website URL (e.g. https://example.com)">
-            <button type="button" onclick="fetchURLData()">Autofill from URL</button><br>
-            <!-- <p id="url-status">Status...</p> -->
-        </div>
-
         <!-- Wraps these inputs in divs so they can be displayed individually when needed -->
 
 
@@ -68,7 +68,7 @@
         <form method="POST" action="/">
 
             <label for="source_type">Source Type:</label>
-            <select name="source_type" id="source_type" onchange="sourceTypeChanged()" required>
+            <select name="source_type" id="source_type" onchange="sourceTypeChanged(this.value)" required>
                 <option value="book">Book</option>
                 <option value="website">Website</option>
             </select><br>
@@ -95,7 +95,7 @@
             <input type="text" name="publisher" id="publisher"><br><br>
 
             <!-- Additional fields for website citations -->
-            <div id="website_fields" style="display: none">
+            <div id="website_fields" class="smooth-toggle">
                 <label for="website_name">Website Name:</label>
                 <input type="text" name="website_name"><br><br>
 
@@ -108,7 +108,7 @@
             
 
 
-            <button type="sumbit">Generate Citation</button>
+            <button type="submit">Generate Citation</button>
         </form>
         <!-- ################################################################# -->
         <!-- ##################### END MANUAL ENTRY FORM ##################### -->
@@ -126,196 +126,8 @@
             <p id="citation-output">{{ citation|safe }}</p>
             <button onclick="copyCitation()">Copy Citation</button>
         {% endif %}
-
-
-            <!-- ########################################################################### -->
-            <!-- ############################# START JAVASCRIPT ############################ -->
-            <!-- ########################################################################### -->
-
-
-            <!-- Javascript function to copy citation to clipboard. Makes 'copy' button work -->
-            <script>
-                function copyCitation() {
-                    // Gets the HTML element containing the citation HTML
-                    const citationElement = document.getElementById("citation-output");
-                    const html = citationElement.innerHTML; // Preserves HTML formatting tags like italics <i> and bold <b>
-                    const text = citationElement.innerText; // Plain text version for places that don't support formatting
-                
-                    // Wraps each version in a Blob. This is like a lightweight file in memory.
-                    // Each blob has data that is used to determine which blob to paste.
-                    const blobHTML = new Blob([html], { type: "text/html" });
-                    const blobText = new Blob([text], { type: "text/plain" });
-                
-                    // Creats a ClipboardItem that holds both formats. Pasted location determines which to use.
-                    const clipboardItem = new ClipboardItem({
-                        "text/html": blobHTML,
-                        "text/plain": blobText
-                    });
-                
-                    // Writes item to clipboard, and shows success or error message.
-                    navigator.clipboard.write([clipboardItem]).then(function() {
-                        alert("Citation copied with formatting!");
-                    }, function(err) {
-                        alert("Failed to copy citation.");
-                        console.error(err);
-                    });
-                }
-            </script>
-
-            <!-- ############################# START FETCH DOI DATA ############################ -->
-            <script>
-                function fetchDOIData() {
-                    // Grabs DOI input field and shows a status message
-                    const doi = document.getElementById("doi-input").value; 
-                    document.getElementById("doi-status").innerText = "Looking up DOI..."
-
-                    // Sends a POST request to Flask backend with the DOI in JSON format
-                    fetch("/lookup-doi", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({doi: doi})
-                    })
-                    // Parses the response, checks for an error, and updates page accordingly
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.error) {
-                            document.getElementById("doi-status").innerText = "Error: " + data.error;
-                        } else {
-                            document.getElementById("doi-status").innerText = "DOI data loaded!";
-
-                            // If successful, fills in the form with the fetched citation data
-                            document.querySelector("[name='author']").value = data.author;
-                            document.querySelector("[name='title']").value = data.title;
-                            document.querySelector("[name='year']").value = data.year;
-                            document.querySelector("[name='publisher']").value = data.publisher;
-                        }
-                    });
-                }
-            </script>
-            <!-- ############################# END FETCH DOI DATA ############################ -->
-
-
-            <!-- ############################# START FETCH ISBN DATA ############################ -->
-            <script>
-                function fetchISBNData() {
-                    // Grabs ISBN input field and shows a status message
-                    const isbn = document.getElementById("isbn-input").value.trim();
-                    document.getElementById("isbn-status").innerText = "Looking up ISBN...";
-                
-                    // Sends a POST request to Flask backend with the ISBN in JSON format
-                    fetch("/lookup-isbn", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ isbn: isbn })
-                    })
-                    // Parses the response, checks for an error, and updates page accordingly
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.error) {
-                            document.getElementById("isbn-status").innerText = "Error: " + data.error;
-                        } else {
-                            document.getElementById("isbn-status").innerText = "ISBN data loaded!";
-
-                            // If successful, fills in the form with the fetched citation data
-                            document.querySelector("[name='author']").value = data.author;
-                            document.querySelector("[name='title']").value = data.title;
-                            document.querySelector("[name='year']").value = data.year;
-                            document.querySelector("[name='publisher']").value = data.publisher;
-                        }
-                    });
-                }
-            </script>
-            <!-- ############################## END FETCH ISBN DATA ############################# -->
-
-
-            <!-- ############################## START FETCH URL DATA ############################# -->
-            <script>
-                function fetchURLData() {
-                    // Grabs URL input field and shows a status message
-                    const url = document.getElementById("url-input").value;
-                    document.getElementById("url-status").innerText = "Looking up URL...";
-                
-                    // Sends a POST request to Flask backend with the ISBN in JSON format
-                    fetch("/lookup-url", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ url: url })
-                    })
-                    // Parses the response, checks for an error, and updates page accordingly
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.error) {
-                            document.getElementById("url-status").innerText = "Error: " + data.error;
-                        } else {
-                            document.getElementById("url-status").innerText = "URL data loaded!";
-                            document.querySelector("[name='author']").value = data.author;
-                            document.querySelector("[name='title']").value = data.title;
-                            document.querySelector("[name='year']").value = data.year;
-                            document.querySelector("[name='publisher']").value = data.publisher;
-                            document.querySelector("[name='url']").value = data.url;
-
-                        }
-                    })
-                    // If successful, fills in the form with the fetched citation data
-                    .catch(err => {
-                        document.getElementById("url-status").innerText = "Error fetching data.";
-                        console.error(err);
-                    });
-                }
-                </script>
-            <!-- ############################### END FETCH URL DATA ############################## -->
-
-
-            <!-- ############################## START AUTOFILL FIELD ############################# -->
-                <script>
-                    function showAutofillField() {
-                        const type = document.getElementById("autofillType").value
-
-                        document.getElementById("doi-input").style.display = "none";
-                        document.getElementById("isbn-input").style.display = "none";
-                        document.getElementById("url-input").style.display = "none";
-
-
-                        if (type === "doi") {
-                            document.getElementById("doi-input").style.display = "block";
-                        } else if (type === "isbn") {
-                            document.getElementById("isbn-input").style.display = "block";
-                        } else if (type === "url") {
-                            document.getElementById("url-input").style.display = "block";
-                        }
-                    }
-                </script>
-            <!-- ############################### END AUTOFILL FIELD ############################## -->
-
-
-
-            <!-- ############################ START SOURCE TYPE CHANGE ########################### -->
-            <script>
-                function sourceTypeChanged() {
-                  const sourceType = document.getElementById("source_type").value;
-                  const websiteFields = document.getElementById("website_fields");
-                
-                  if (sourceType === "website") {
-                    websiteFields.style.display = "block";
-                  } else {
-                    websiteFields.style.display = "none";
-                  }
-                }
-            </script>
-            <!-- ############################# END SOURCE TYPE CHANGE ############################ -->
-        
-
-
-        <!-- ########################################################################### -->
-        <!-- ############################## END JAVASCRIPT ############################# -->
-        <!-- ########################################################################### -->
-
     </div>
+
+    <script src="/static/script.js"></script>
 </body>
 </html>

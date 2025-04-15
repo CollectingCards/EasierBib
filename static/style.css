@@ -1,7 +1,7 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f9f9f9;
-    margin: 0;
+    margin: 20px;
     padding: 0;
 }
 
@@ -49,3 +49,28 @@ margin-top: 10px;
 font-style: italic;
 color: #555;
 }    
+
+/* Smooth transitions for showing/hiding form fields */
+.smooth-toggle{
+    height: 0;
+    position: absolute;
+    overflow: hidden;
+    transition: opacity 0.4s ease;
+    opacity: 0;
+    pointer-events: none; /* Prevent interaction when hidden */
+    visibility: hidden;
+    z-index: 0; /* ensure correct stacking */
+}
+
+.smooth-toggle.show{
+    height: auto;
+    position: relative;
+    opacity: 1;
+    pointer-events: auto; /* Enable interaction when shown */
+    visibility: visible;
+    z-index: 1; /* ensure correct stacking */
+}
+
+.autofill-wrapper {
+    /* position: relative; */
+}
